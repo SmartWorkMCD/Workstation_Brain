@@ -1,4 +1,5 @@
-import random
+from io_handlers.consumers.candy_consumer import CandyConsumer
+from io_handlers.consumers.hand_consumer import HandConsumer
 
 
 class GridMapper:
@@ -17,39 +18,13 @@ class GridMapper:
 class InputHandler:
     def __init__(self, state):
         self.state = state
-        self.grid_mapper = GridMapper()
 
-    def simulate_hand_tracking(self):
-        # Simulate hand coordinates (center_x, center_y)
-        hand_x = random.uniform(0, self.grid_mapper.image_width)
-        hand_y = random.uniform(0, self.grid_mapper.image_height)
+        self.hand_consumer = HandConsumer(state)
+        self.candy_consumer = CandyConsumer(state)
 
-        # Obtain grid cell from coordinates
-        cell = self.grid_mapper.get_grid_cell(hand_x, hand_y)
-
-        # Update state with hand position and grid cell
-        self.state.update("HandGridCell", cell)
-        print(f"[Sim] Hand position: ({hand_x:.1f}, {hand_y:.1f}) -> Grid Cell: {cell}")
-
-    def simulate_candy_detection(self):
-        # Simulate YOLO-style bounding box data (center_x, center_y, width, height)
-        labels = ["Yellow", "Blue", "Green"]
-
-        use_expected = random.random() < 0.5  # 50% chance to match expected config
-        if use_expected:
-            detected_candies = self.state.data.get("ExpectedConfig", {}).copy()
-            print("[Sim] Using expected config for detection")
-        else:
-            detected_candies = {}
-            for label in labels:
-                count = random.randint(0, 3)
-                if count > 0:
-                    detected_candies[label] = count
-
-        # Update state with detected candies
-        self.state.update("DetectedCandies", detected_candies)
-        print(f"[Sim] Detected candies: {detected_candies}")
+        self.hand_consumer.start()
+        self.candy_consumer.start()
 
     def update_state_from_sensors(self):
-        self.simulate_hand_tracking()
-        self.simulate_candy_detection()
+        self.hand_consumer.update()
+        self.candy_consumer.update()

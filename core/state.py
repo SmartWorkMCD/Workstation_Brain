@@ -9,8 +9,10 @@ class WorkstationState:
             "DetectedCandies": {},
             "ExpectedConfig": expected_config or {},  # From product definition
             "Defects": [],  # List of detected defects
-            "HandGridCell": None,  # Grid cell where the hand is detected
-            "HandInFrame": False,  # Boolean if worker hand is present
+            "handL_GridCell": None,  # Grid cell for left hand
+            "handR_GridCell": None,  # Grid cell for right hand
+            "handL_Present": False,  # Presence of left hand
+            "handR_Present": False,  # Presence of right hand
         }
 
     def update(self, key, value):
@@ -39,6 +41,10 @@ class WorkstationState:
         ) and all(
             color in expected for color in detected
         )
+
+    def register_hand_presence(self, hand_label, present):
+        """Register the presence of a hand."""
+        self.data[f"{hand_label}_Present"] = present
 
     def get_hand_grid_cell(self):
         return self.data.get("HandGridCell")

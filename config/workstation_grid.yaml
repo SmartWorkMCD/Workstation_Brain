@@ -1,0 +1,21 @@
+hand_mqtt:
+  enabled: true
+  broker_ip: "127.0.0.1"
+  broker_port: 1883
+  topic: "hands/position"
+  username: "user"
+  password: "password"
+
+candy_mqtt:
+  enabled: true
+  broker_ip: "127.0.0.2"
+  broker_port: 1883
+  topic: "candy/position"
+  username: "user"
+  password: "password"
+
+grid:
+  rows: 3
+  cols: 3
+  image_width: 640
+  image_height: 480

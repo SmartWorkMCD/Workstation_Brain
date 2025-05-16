@@ -33,7 +33,7 @@ class OutputDispatcher:
     def send_to_projector_visuals(self, state_dict):
         message = json.dumps({
             "highlight": "red" if not state_dict.get("CombinationValid", True) else "green",
-            "hand_grid_cell": state_dict.get("HandGridCell")
+            "hand_tracking": state_dict.get("HandGridCell")
         })
 
         print("[Projector Display]", message)
