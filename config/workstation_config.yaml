@@ -1,0 +1,20 @@
+mqtt:
+  enabled: true
+  broker_ip: "127.0.0.1"
+  broker_port: 1883
+  topic: "hands/position"
+  username: "user"
+  password: "password"
+
+hand_topic: "hands/position"
+candy_topic: "candy/detection"
+task_assignment_topic: "v1/devices/me/attributes"
+task_division_topic: "v1/devices/me/telemetry"
+processing_topic: "projector/control"
+interaction_topic: "management/interface"
+
+grid:
+  rows: 3
+  cols: 3
+  image_width: 640
+  image_height: 480

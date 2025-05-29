@@ -4,17 +4,18 @@ from abc import ABC
 
 import paho.mqtt.client as mqtt
 
-from io_handlers.consumers.base_consumer import SensorConsumer
+from io_handlers.consumers.base_consumer import BaseConsumer
 from io_handlers.input_handler import GridMapper
 from utils.yaml_loader import load_yaml
 
 
-class HandConsumer(SensorConsumer, ABC):
+class HandConsumer(BaseConsumer, ABC):
     def __init__(self, state):
         super().__init__(state)
 
         # Load configuration from YAML file
         self.config = load_yaml("config/workstation_config.yaml")
+        self.broker_conf = self.config.get("hand_mqtt", {})
         grid_conf = self.config["grid"]
 
         # Initialize grid mapper with configuration
@@ -27,12 +28,12 @@ class HandConsumer(SensorConsumer, ABC):
 
     def start(self):
         self.client = mqtt.Client()
-        self.client.username_pw_set(self.config["username"], self.config["password"])
+        self.client.username_pw_set(self.broker_conf["username"], self.broker_conf["password"])
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
 
         self.client.connect(self.config["broker_ip"], self.config["broker_port"], 60)
-        self.client.subscribe(self.config["topic"])
+        self.client.subscribe(self.broker_conf["topic"])
 
         self.thread = threading.Thread(target=self.client.loop_forever, daemon=True)
         self.thread.start()

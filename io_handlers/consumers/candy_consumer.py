@@ -1,15 +1,16 @@
 import json
 import random
 
-from io_handlers.consumers.base_consumer import SensorConsumer
+from io_handlers.consumers.base_consumer import BaseConsumer
 from utils.yaml_loader import load_yaml
 
 
-class CandyConsumer(SensorConsumer):
+class CandyConsumer(BaseConsumer):
 
     def __init__(self, state):
         super().__init__(state)
         self.config = load_yaml("config/workstation_config.yaml")["candy_mqtt"]
+        self.broker_conf = self.config.get("candy_mqtt", {})
 
     def start(self):
         pass

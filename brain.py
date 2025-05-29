@@ -1,3 +1,4 @@
+from collections import deque
 from core.evaluator import RuleEvaluator
 from core.state import WorkstationState
 from core.task_manager import TaskManager
@@ -7,36 +8,56 @@ from utils.yaml_loader import load_yaml
 
 
 class WorkstationBrain:
-    def __init__(self, product_id, task_id):
-
-        # TODO: Change this (Task Division should set the rules, tasks, and products)
+    def __init__(self):
+        # Load config and metadata
         self.rules = load_yaml("config/rules.yaml")["rules"]
-        self.tasks = load_yaml("config/rules.yaml")["tasks"]
-        self.products = load_yaml("config/products.yaml")["produtos"]
+        self.tasks_metadata = load_yaml("config/rules.yaml")["tasks"]
 
-        self.state = WorkstationState(expected_config=self.products[product_id]["config"])
+        # Initialize state (config set later)
+        self.state = WorkstationState(expected_config=None)
+
+        # Initialize components
+        self.task_manager = TaskManager(self.tasks_metadata)
+        self.evaluator = RuleEvaluator()
         self.input_handler = InputHandler(self.state)
         self.output_dispatcher = OutputDispatcher()
 
-        self.task_manager = TaskManager(self.tasks, task_id)
-        self.evaluator = RuleEvaluator()
+    def on_assignment_received(self, payload):
+        """Called by the TaskAssignmentConsumer when new subtasks are assigned."""
+        subtask_id = payload.get("task_id")
+        product_config = payload.get("config", {})
+
+        if self.state.expected_config is None:
+            self.state.expected_config = product_config
+
+        found = False
+        for task_id, task_data in self.tasks_metadata.items():
+            subtasks = task_data.get("subtasks", {})
+            if subtask_id in subtasks:
+                self.task_manager.enqueue_subtask(task_id, subtask_id)
+                print(f"[Brain] Subtask {subtask_id} from {task_id} enqueued.")
+                found = True
+                break
+
+        if not found:
+            print(f"[Brain] Subtask {subtask_id} not found in task metadata.")
 
     def run(self):
-        # TODO: Implement infinite loop
-        for _ in range(5):
+        print("[Brain] Starting main loop...")
+        while True:
             self.input_handler.update_state_from_sensors()
             current_subtask = self.task_manager.get_current_subtask()
 
             if not current_subtask:
-                print("All tasks completed.")
-                return
+                print("[Brain] Waiting for new task assignments...")
+                continue
 
-            task_key = self.task_manager.task_keys[self.task_manager.current_task_idx]
-            subtask_key = self.task_manager.current_subtask_keys[self.task_manager.current_subtask_idx]
+            task_id = self.task_manager.get_current_task_id()
+            subtask_id = self.task_manager.get_current_subtask_id()
             progress = self.task_manager.get_progress()
 
-            # Display current state before any rule application
-            self.output_dispatcher.send_to_management_interface(task_key, subtask_key, progress, self.state.to_dict())
+            # TODO: Change this
+            self.output_dispatcher.send_to_management_interface(task_id, subtask_id, progress, self.state.to_dict())
             self.output_dispatcher.send_to_projector_visuals(self.state.to_dict())
 
             rules = current_subtask.get("rules", [])
@@ -47,4 +68,4 @@ class WorkstationBrain:
                     self.task_manager.advance()
                     break
 
-            print(f"-------------------------------")
+            print("-------------------------------")
