@@ -1,36 +1,19 @@
-import time
-import threading
 from io_handlers.publishers.base_publisher import BasePublisher
 from utils.yaml_loader import load_yaml
+import time
 
 
 class TaskDivisionPublisher(BasePublisher):
-    def __init__(self, state, interval_seconds=10):
+    def __init__(self, state):
         super().__init__(state)
         self.config = load_yaml("config/workstation_config.yaml")
         self.topic = self.config.get("task_division_topic", "v1/devices/me/telemetry")
-        self.running = False
-        self.thread = None
-        self.interval = interval_seconds
 
-    def collect_statistics(self):
-        return {
-            "subtasks_completed": self.state.subtasks_completed,
-            "subtask_timings": self.state.subtask_timings,
+    def send_current_subtask_completed(self, subtask_id: str, start_time: float, end_time: float):
+        payload = {
+            "subtask_id": subtask_id,
+            "start_time": start_time,
+            "end_time": end_time,
+            "duration": end_time - start_time,
         }
-
-    def start(self):
-        self.running = True
-        self.thread = threading.Thread(target=self._run_loop, daemon=True)
-        self.thread.start()
-
-    def _run_loop(self):
-        while self.running:
-            stats = self.collect_statistics()
-            self.publish(self.topic, stats)
-            time.sleep(self.interval)
-
-    def stop(self):
-        self.running = False
-        if self.thread:
-            self.thread.join()
+        self.publish(self.topic, payload)

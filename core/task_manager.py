@@ -16,8 +16,8 @@ class TaskManager:
         self.total_enqueued = 0
 
         # For timing subtasks
-        self.subtask_timings = {}  # {subtask_id: duration_in_seconds}
         self.current_subtask_start_time = None
+        self.current_subtask_end_time = None
         self.current_subtask_id = None
 
     def enqueue_subtask(self, task_id, subtask_id):
@@ -38,16 +38,22 @@ class TaskManager:
         """Return the current subtask at the front of the queue."""
         if self.subtask_queue:
 
+            # Check if it is a new subtask
+            started = False
+
             # Get the task and subtask IDs
             task_id, subtask_id = self.subtask_queue[0]
 
             # Check if we need to start timing this subtask
             if subtask_id != self.current_subtask_id:
+                started = True
                 self.current_subtask_start_time = time.time()
                 self.current_subtask_id = subtask_id
                 print(f"[TaskManager] Started timing for {subtask_id}.")
 
-            return self.tasks[task_id]["subtasks"].get(subtask_id, None)
+            return self.tasks[task_id]["subtasks"].get(subtask_id, None), started
+
+        return None, False
 
     def get_current_subtask_id(self):
         """Return the ID of the current subtask, or None if none available."""
@@ -63,20 +69,21 @@ class TaskManager:
             # Pop the current subtask from the queue
             task_id, subtask_id = self.subtask_queue.popleft()
 
-            # Calculate the duration for the completed subtask
-            end_time = time.time()
-            duration = end_time - self.current_subtask_start_time
+            # Stop timing the current subtask
+            current_subtask_end_time = time.time()
+            duration = current_subtask_end_time - self.current_subtask_start_time
 
-            # Store the timing for this subtask
-            self.subtask_timings[subtask_id] = duration
             self.completed_count += 1
-
-            # Reset the current subtask tracking
-            self.current_subtask_id = None
 
             print(f"[TaskManager] Completed {subtask_id} in {duration:.2f} seconds.")
         else:
             print("[TaskManager] No subtasks to advance.")
+
+    def clear(self):
+        """Clear the current subtask tracking."""
+        self.current_subtask_start_time = None
+        self.current_subtask_end_time = None
+        self.current_subtask_id = None
 
     def get_progress(self):
         """Calculate the progress as a fraction of completed subtasks."""
@@ -92,7 +99,3 @@ class TaskManager:
             "total": self.total_enqueued,
             "progress": round(self.get_progress(), 2)
         }
-
-    def get_timings(self):
-        """Return the timings for each completed subtask."""
-        return self.subtask_timings

@@ -1,6 +1,6 @@
 import json
 import paho.mqtt.client as mqtt
-from utils.yaml_loader import load_yaml  # Ensure this module exists in your project
+from utils.yaml_loader import load_yaml
 
 
 class BasePublisher:
@@ -21,6 +21,7 @@ class BasePublisher:
             self.mqtt_conf.get("broker_port", 1883),
             60
         )
+        self.client.loop_start()  # <-- important for async publishing
 
     def publish(self, topic, data):
         try:
@@ -32,3 +33,7 @@ class BasePublisher:
                 print(f"[MQTT] Published to {topic}: {payload}")
         except Exception as e:
             print(f"[MQTT] Error publishing to {topic}: {e}")
+
+    def stop(self):
+        self.client.loop_stop()
+        self.client.disconnect()

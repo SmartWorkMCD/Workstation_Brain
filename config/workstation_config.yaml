@@ -14,7 +14,7 @@ processing_topic: "projector/control"
 interaction_topic: "management/interface"
 
 grid:
-  rows: 3
-  cols: 3
+  rows: 4
+  cols: 4
   image_width: 640
   image_height: 480
