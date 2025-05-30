@@ -1,23 +1,19 @@
 import json
-import threading
 from abc import ABC
 
-import paho.mqtt.client as mqtt
-
-from io_handlers.consumers.base_consumer import SensorConsumer
+from io_handlers.consumers.base_consumer import BaseConsumer
 from io_handlers.input_handler import GridMapper
-from utils.yaml_loader import load_yaml
 
 
-class HandConsumer(SensorConsumer, ABC):
+class HandConsumer(BaseConsumer, ABC):
     def __init__(self, state):
         super().__init__(state)
 
-        # Load configuration from YAML file
-        self.config = load_yaml("config/workstation_config.yaml")
-        grid_conf = self.config["grid"]
+        # Load MQTT topic from global config
+        self.topic = self.config.get("hand_topic", "hands/position")
 
-        # Initialize grid mapper with configuration
+        # Initialize GridMapper with workspace grid setup
+        grid_conf = self.config["grid"]
         self.grid_mapper = GridMapper(
             grid_rows=grid_conf["rows"],
             grid_cols=grid_conf["cols"],
@@ -25,20 +21,8 @@ class HandConsumer(SensorConsumer, ABC):
             image_height=grid_conf["image_height"]
         )
 
-    def start(self):
-        self.client = mqtt.Client()
-        self.client.username_pw_set(self.config["username"], self.config["password"])
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
-
-        self.client.connect(self.config["broker_ip"], self.config["broker_port"], 60)
-        self.client.subscribe(self.config["topic"])
-
-        self.thread = threading.Thread(target=self.client.loop_forever, daemon=True)
-        self.thread.start()
-
-    def on_connect(self, client, userdata, flags, rc):
-        print("[MQTT] Connected with result code", rc)
+    def get_topic(self):
+        return self.topic
 
     def on_message(self, client, userdata, msg):
         try:
@@ -56,7 +40,6 @@ class HandConsumer(SensorConsumer, ABC):
                     self.state.update(f"{hand_label}_GridCell", cell)
                     self.state.register_hand_presence(hand_label, True)
                     print(f"[MQTT] {hand_label} at ({x:.1f}, {y:.1f}) → Grid Cell {cell}")
-
                 else:
                     print(f"[MQTT] Missing coordinates for {hand_label}")
                     self.state.update(f"{hand_label}_GridCell", None)
