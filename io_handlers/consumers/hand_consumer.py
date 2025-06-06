@@ -2,7 +2,7 @@ import json
 from abc import ABC
 
 from io_handlers.consumers.base_consumer import BaseConsumer
-from io_handlers.input_handler import GridMapper
+from io_handlers.consumers.grid_mapper import GridMapper
 
 
 class HandConsumer(BaseConsumer, ABC):
@@ -31,7 +31,7 @@ class HandConsumer(BaseConsumer, ABC):
             for hand_label in ["handL", "handR"]:
                 x_key = f"{hand_label}_Wrist_x"
                 y_key = f"{hand_label}_Wrist_y"
-
+                
                 if x_key in payload and y_key in payload:
                     x = float(payload[x_key]) * self.grid_mapper.image_width
                     y = float(payload[y_key]) * self.grid_mapper.image_height

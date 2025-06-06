@@ -10,6 +10,12 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
 
         self.topic = self.config.get("task_assignment_topic", "v1/devices/me/attributes")
         self.on_assignment_callback = on_assignment_callback
+        self.base_products = {
+            'T1A': {'Yellow': 1},
+            'T1B': {'Blue': 1},
+            'T1C': {'Green': 1},
+            'T1D': {'Red': 1}
+        }
 
     def get_topic(self):
         return self.topic
@@ -19,14 +25,17 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
             payload = json.loads(msg.payload.decode("utf-8"))
             print(f"[MQTT] Task Assignment received: {payload}")
 
-            tasks = payload.get("tasks")
-            if not tasks or not isinstance(tasks, list):
-                print(f"[MQTT] Warning: Expected 'tasks' as a list, got {tasks}")
+            if not payload or not isinstance(payload, dict):
+                print(f"[MQTT] Warning: Expected 'payload' as a dict, got {payload}")
                 return
-
-            for task_id in tasks:
-                if self.on_assignment_callback:
-                    self.on_assignment_callback(task_id)
+            
+            for product in payload.keys():
+                for subtask in payload[product]:
+                    if subtask in self.base_products.keys():
+                        self.on_assignment_callback({"task_id": subtask, "config": self.base_products[subtask]})
+                    else:
+                        self.on_assignment_callback({"task_id": subtask, "product": product})
+            
 
         except Exception as e:
             print(f"[MQTT] Error decoding task assignment: {e}")

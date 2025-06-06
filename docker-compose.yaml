@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    restart: unless-stopped
+    ports:
+      - "${BROKER_PORT}:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    environment:
+      - BROKER_USER=${BROKER_USER}
+      - BROKER_PASSWORD=${BROKER_PASSWORD}
+      - BROKER_PORT=${BROKER_PORT}
+    entrypoint: [ "sh", "-c", "
+      if [ ! -f /mosquitto/config/passwd ]; then \
+        touch /mosquitto/config/passwd && \
+        mosquitto_passwd -b /mosquitto/config/passwd \"$BROKER_USER\" \"$BROKER_PASSWORD\"; \
+      fi && \
+      mosquitto -c /mosquitto/config/mosquitto.conf"
+    ]
+    networks:
+      custom_net:
+
+  # hand_tracking:
+  #   image: ghcr.io/smartworkmcd/handtracking:latest
+  #   container_name: hand-tracking
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - mqtt-broker
+  #   environment:
+  #     - BROKER_IP=mqtt-broker
+  #     - BROKER_PORT=${BROKER_PORT}
+  #     - BROKER_USER=${BROKER_USER}
+  #     - BROKER_PASSWORD=${BROKER_PASSWORD}
+  #     - CAMERA_ID=0
+  #     - SHOW_SCREEN=False
+  #   # devices:
+  #   #   - "/dev/video0:/dev/video0"
+  #   networks:
+  #     custom_net:
+  
+  # workstation_brain:    
+  #   container_name: workstation-brain
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - mqtt-broker
+  #     - hand_tracking
+  #   environment:
+  #     - BROKER_IP=mqtt-broker
+  #     - BROKER_PORT=${BROKER_PORT}
+  #     - BROKER_USER=${BROKER_USER}
+  #     - BROKER_PASSWORD=${BROKER_PASSWORD}
+networks:
+  custom_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24

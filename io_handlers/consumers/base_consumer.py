@@ -36,6 +36,7 @@ class BaseConsumer(ABC):
             self.client.subscribe(subscribe_topic)
 
         self.thread = threading.Thread(target=self.client.loop_forever, daemon=True)
+        print(f"[MQTT] Starting MQTT consumer thread..., {subscribe_topic}")
         self.thread.start()
 
     def get_topic(self):

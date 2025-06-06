@@ -13,6 +13,14 @@ class WorkstationState:
             "handR_GridCell": None,  # Grid cell for right hand
             "handL_Present": False,  # Presence of left hand
             "handR_Present": False,  # Presence of right hand
+            "handL_data": {},
+            "handR_data": {}
+        }
+        self.base_products = {
+            'T1A': {'Yellow': 1},
+            'T1B': {'Blue': 1},
+            'T1C': {'Green': 1},
+            'T1D': {'Red': 1}
         }
 
     def update(self, key, value):
@@ -32,15 +40,21 @@ class WorkstationState:
     def reset_defects(self):
         self.data["Defects"] = []
 
-    def validate_combination(self):
+    def validate_combination(self, subtask_id):
         """Check if the detected candies match the expected configuration."""
+        if subtask_id.startswith('T1'):
+            self.data["ExpectedConfig"] = self.base_products[subtask_id]
         expected = self.data["ExpectedConfig"]
-        detected = self.data["DetectedCandies"]
+        detected = self.data["DetectedCandies"]['combo']
         self.data["CombinationValid"] = all(
             detected.get(color, 0) == count for color, count in expected.items()
         ) and all(
             color in expected for color in detected
         )
+        if self.data["CombinationValid"]:
+            self.data["CandiesWrapped"] = True
+        else:
+            self.data["CandiesWrapped"] = False
 
     def register_hand_presence(self, hand_label, present):
         """Register the presence of a hand."""

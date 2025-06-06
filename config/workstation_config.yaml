@@ -3,8 +3,8 @@ mqtt:
   broker_ip: "127.0.0.1"
   broker_port: 1883
   topic: "hands/position"
-  username: "user"
-  password: "password"
+  username: "admin"
+  password: "admin"
 
 hand_topic: "hands/position"
 candy_topic: "candy/detection"
@@ -14,7 +14,7 @@ processing_topic: "projector/control"
 interaction_topic: "management/interface"
 
 grid:
-  rows: 4
-  cols: 4
+  rows: 3
+  cols: 3
   image_width: 640
   image_height: 480

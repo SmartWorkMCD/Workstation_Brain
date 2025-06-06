@@ -7,12 +7,13 @@ class ProjectorPublisher(BasePublisher):
         super().__init__(state)
         self.config = load_yaml("config/workstation_config.yaml")
         self.topic = self.config.get("projector_topic", "projector/control")
-
+        self.colNames = ['A','B','C','D','E']  
     def highlight_cell_green(self, row: int, col: int):
         """Highlight a cell in green."""
+
         message = {
-            "row": row,
-            "col": col,
+            "row": row + 1,
+            "col": self.colNames[col + 1],
             "action": "highlight-green"
         }
         self.publish(self.topic, message)
@@ -20,8 +21,8 @@ class ProjectorPublisher(BasePublisher):
     def highlight_cell_red(self, row: int, col: int):
         """Highlight a cell in red (e.g., to indicate an error)."""
         message = {
-            "row": row,
-            "col": col,
+            "row": row + 1,
+            "col": self.colNames[col + 1],
             "action": "highlight-red"
         }
         self.publish(self.topic, message)
@@ -29,8 +30,8 @@ class ProjectorPublisher(BasePublisher):
     def clear_cell(self, row: int, col: int):
         """Clear highlight from a cell."""
         message = {
-            "row": row,
-            "col": col,
+            "row": row + 1,
+            "col": self.colNames[col + 1],
             "action": "clear"
         }
         self.publish(self.topic, message)
