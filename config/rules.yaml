@@ -41,7 +41,7 @@ tasks:
     dependencies:
       - Task1
     subtasks:
-      T2:
+      T2A:
         task_name: "Assemble Candy Boxes"
         task_description: "Assemble candies into boxes according to product specifications."
         rules:

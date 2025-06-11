@@ -9,7 +9,7 @@ class CandyConsumer(BaseConsumer):
         super().__init__(state)
 
         # Load MQTT topic from global config
-        self.topic = self.config.get("candy_topic", "candy/detection")
+        self.topic = self.config.get("candy_topic", "objdet/results")
         
     def get_topic(self):
         return self.topic
@@ -48,28 +48,30 @@ class CandyConsumer(BaseConsumer):
                     'y2': payload[f'yolo_{i}_y2'],
                     'score': payload[f'yolo_{i}_score']
                 }
-                if payload[f'yolo_{i}_score'] < 0.6:
+                if payload[f'yolo_{i}_score'] < 0.5:
                     continue
                 # check if candy is inside validation area
                 # neccessary to normalize x and y values, ask Mateus
                 # assumes x is [0, 960] and y [0,720], same as resolution
-                x1_norm = float(candy['x1'] / 960)
-                x2_norm = float(candy['x2'] / 960)
+                x1_norm = float(candy['x1'] / 1280)
+                x2_norm = float(candy['x2'] / 1280)
                 y1_norm = float(candy['y1'] / 720)
                 y2_norm = float(candy['y2'] / 720)
-                if not all(0.3 < val < 0.6 for val in [x1_norm, x2_norm, y1_norm, y2_norm]):
+                if not all(0.3 < val < 0.7 for val in [x1_norm, x2_norm, y1_norm, y2_norm]):
                     print("Removed detection candy outside submission area")
                     continue
-
-                if payload[f'yolo_{i}_class'] in candies_combination.keys():
-                    candies_combination[payload[f'yolo_{i}_class']] += 1
+                color = str(payload[f'yolo_{i}_class']).capitalize()
+                if color in candies_combination.keys():
+                    candies_combination[color] += 1
                 else:
-                    candies_combination[payload[f'yolo_{i}_class']] = 1
-                candies[f'candy_{i}'] = candy
-            candies['combo'] = candies_combination
-            self.state.update("DetectedCandies", candies)
-            print(f"[MQTT] Detected candies: {candies}")
+                    candies_combination[color] = 1
 
-            print(f"[MQTT] Received candy detection message: {payload}")
+                candies[f'candy_{i}'] = candy
+            
+            self.state.update("DetectedCandies", candies_combination)
+            self.state.update("CandiesData",candies)
+            print(f"[MQTT] Detected candies: {candies_combination}")
+
+            # print(f"[MQTT] Received candy detection message: {payload}")
         except json.JSONDecodeError as e:
             print(f"[MQTT] Error decoding JSON: {e}")

@@ -70,8 +70,8 @@ class TaskManager:
             task_id, subtask_id = self.subtask_queue.popleft()
 
             # Stop timing the current subtask
-            current_subtask_end_time = time.time()
-            duration = current_subtask_end_time - self.current_subtask_start_time
+            self.current_subtask_end_time = time.time()
+            duration = self.current_subtask_end_time - self.current_subtask_start_time
 
             self.completed_count += 1
 

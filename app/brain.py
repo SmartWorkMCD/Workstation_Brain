@@ -41,17 +41,15 @@ class WorkstationBrain:
         """Called by the TaskAssignmentConsumer when new subtasks are assigned."""
         subtask_id = payload.get("task_id")
         product_config = payload.get("config", {})
-
         if product_config == {}:
-            self.state.expected_config = self.products[payload.get("product")]["config"]
-        else:
-            self.state.expected_config = product_config
-
+            product_config = self.products[payload.get("product")]["config"]
+        print(f"[Brain] New task assignment received: {subtask_id} with config {product_config}")
         # Enqueue the subtask
         found = False
         for task_id, task_data in self.tasks_metadata.items():
             if subtask_id in task_data.get("subtasks", {}):
                 self.task_manager.enqueue_subtask(task_id, subtask_id)
+                self.state.data['SubtaskConfigs'][subtask_id] = product_config
                 print(f"[Brain] Subtask {subtask_id} from {task_id} enqueued.")
                 found = True
                 break
@@ -79,7 +77,9 @@ class WorkstationBrain:
             if self.state.data['handR_Present']:
                 handR = self.state.data['handR_data']
             # TODO: Process input and update state
-            
+            if current_subtask:
+                self.state.update("ExpectedConfig",self.state.data['SubtaskConfigs'][self.task_manager.get_current_subtask_id()[1]])
+                print("[Brain] Current subtask: " + str(self.task_manager.get_current_subtask_id()[1]) + " with config " + str(self.state.data['ExpectedConfig']))
             if clean:
                 print("[Brain] Cleaning the table before starting a new subtask...")
                 noHands = False
@@ -90,7 +90,7 @@ class WorkstationBrain:
                     noHands = True
                 else:
                     print("[Brain] Cleaning the table, Make sure to remove candies from submission area")
-                if len(list(candies['combo'].keys())) > 0:
+                if len(list(candies.keys())) > 0:
                     print("[Brain] Cleaning the table, Make sure to remove candies from submission area")    
                 else:
                     print("[Brain] Cleaning the table, No candies are present")
@@ -124,13 +124,13 @@ class WorkstationBrain:
             for rule_id in rules:
                 rule = self.rules.get(rule_id)
                 if rule and not self.evaluator.evaluate_rule(rule["if"], self.state):
-                    print(f"[Brain] Rule {rule_id} not satisfied. Waiting for conditions...")
+                    # print(f"[Brain] Rule {rule_id} not satisfied. Waiting for conditions...")
 
                     # Notify the projector about the unsatisfied rule: Highlight the last cell in red
-                    self.projector_publisher.highlight_cell_red(
-                        self.config["grid"]["rows"],
-                        self.config["grid"]["cols"]
-                    )
+                    # self.projector_publisher.highlight_cell_red(
+                    #     self.config["grid"]["rows"],
+                    #     self.config["grid"]["cols"]
+                    # )
 
                     # If the rule is not satisfied, we can break out of the loop
                     completed = False
@@ -157,6 +157,7 @@ class WorkstationBrain:
                 clean = True
                 self.state.data["CombinationValid"] = False
                 self.state.data["CandiesWrapped"] = False
+                self.state.data["ExpectedConfig"] = {}
                 # Clear the subtask tracking
                 self.task_manager.clear()
 

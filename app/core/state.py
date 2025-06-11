@@ -7,6 +7,7 @@ class WorkstationState:
             "CandiesWrapped": False,
             "CombinationValid": False,
             "DetectedCandies": {},
+            "CandiesData": {},
             "ExpectedConfig": expected_config or {},  # From product definition
             "Defects": [],  # List of detected defects
             "handL_GridCell": None,  # Grid cell for left hand
@@ -14,7 +15,8 @@ class WorkstationState:
             "handL_Present": False,  # Presence of left hand
             "handR_Present": False,  # Presence of right hand
             "handL_data": {},
-            "handR_data": {}
+            "handR_data": {},
+            "SubtaskConfigs": {}
         }
         self.base_products = {
             'T1A': {'Yellow': 1},
@@ -26,13 +28,15 @@ class WorkstationState:
     def update(self, key, value):
         self.data[key] = value
         if key == "DetectedCandies":
-            self.validate_combination()
+            if value != {} and self.data["ExpectedConfig"] != {}:
+                self.validate_combination()
 
     def bulk_update(self, updates: dict):
         for key, value in updates.items():
             self.data[key] = value
         if "DetectedCandies" in updates:
-            self.validate_combination()
+            if value != {} and self.data["ExpectedConfig"] != {}:
+                self.validate_combination()
 
     def add_defect(self, defect_description):
         self.data["Defects"].append(defect_description)
@@ -40,17 +44,18 @@ class WorkstationState:
     def reset_defects(self):
         self.data["Defects"] = []
 
-    def validate_combination(self, subtask_id):
+    def validate_combination(self):
         """Check if the detected candies match the expected configuration."""
-        if subtask_id.startswith('T1'):
-            self.data["ExpectedConfig"] = self.base_products[subtask_id]
+        print("\033[91m[State] Validating combination...\033[0m")
         expected = self.data["ExpectedConfig"]
-        detected = self.data["DetectedCandies"]['combo']
+        detected = self.data["DetectedCandies"]
         self.data["CombinationValid"] = all(
             detected.get(color, 0) == count for color, count in expected.items()
         ) and all(
             color in expected for color in detected
         )
+        print(f"\033[92m[State] Expected Config: {self.data['ExpectedConfig']}\033[0m")
+        print(f"\033[93m[State] Detected Candies: {self.data['DetectedCandies']}\033[0m")
         if self.data["CombinationValid"]:
             self.data["CandiesWrapped"] = True
         else:

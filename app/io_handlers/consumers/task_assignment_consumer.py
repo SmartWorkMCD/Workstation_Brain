@@ -32,8 +32,10 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
             for product in payload.keys():
                 for subtask in payload[product]:
                     if subtask in self.base_products.keys():
+                        print(f"[MQTT-Tasks] Subtask {subtask} for product {self.base_products[subtask]}")
                         self.on_assignment_callback({"task_id": subtask, "config": self.base_products[subtask]})
                     else:
+                        print(f"[MQTT-Tasks] Subtask {subtask} for product {product}")
                         self.on_assignment_callback({"task_id": subtask, "product": product})
             
 

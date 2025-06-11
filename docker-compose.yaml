@@ -25,25 +25,8 @@ services:
     networks:
       custom_net:
 
-  # hand_tracking:
-  #   image: ghcr.io/smartworkmcd/handtracking:latest
-  #   container_name: hand-tracking
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - mqtt-broker
-  #   environment:
-  #     - BROKER_IP=mqtt-broker
-  #     - BROKER_PORT=${BROKER_PORT}
-  #     - BROKER_USER=${BROKER_USER}
-  #     - BROKER_PASSWORD=${BROKER_PASSWORD}
-  #     - CAMERA_ID=0
-  #     - SHOW_SCREEN=False
-  #   # devices:
-  #   #   - "/dev/video0:/dev/video0"
-  #   networks:
-  #     custom_net:
-  
   # workstation_brain:    
+  #   image: ghcr.io/smartworkmcd/workstationbrain:latest
   #   container_name: workstation-brain
   #   restart: unless-stopped
   #   depends_on:
