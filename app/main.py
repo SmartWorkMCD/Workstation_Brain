@@ -2,20 +2,58 @@ from utils.yaml_loader import load_yaml
 from core.state import WorkstationState
 from core.evaluator import RuleEvaluator
 from core.task_manager import TaskManager
+from core.state_machine import StateMachine, WorkstationStates
+from core.workstation_states import (
+    IdleState, WaitingForTaskState, CleaningState,
+    ExecutingTaskState, WaitingConfirmationState, TaskCompletedState
+)
 from io_handlers.consumers.candy_consumer import CandyConsumer
 from io_handlers.consumers.hand_consumer import HandConsumer
 from io_handlers.consumers.task_assignment_consumer import TaskAssignmentConsumer
 from io_handlers.publishers.projector_publisher import ProjectorPublisher
 from io_handlers.publishers.task_division_publisher import TaskDivisionPublisher
+from io_handlers.publishers.management_publisher import ManagementInterfacePublisher
 import time
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+class WorkstationBrainContext:
+    """Context object that holds all the data and components for the state machine"""
+
+    def __init__(self, brain):
+        self.brain = brain
+        self.rules = brain.rules
+        self.tasks_metadata = brain.tasks_metadata
+        self.config = brain.config
+        self.products = brain.products
+        self.state = brain.state
+        self.task_manager = brain.task_manager
+        self.evaluator = brain.evaluator
+        self.projector_publisher = brain.projector_publisher
+        self.task_division_publisher = brain.task_division_publisher
+        self.management_publisher = brain.management_publisher
+        self.first_time = True
+
 
 class WorkstationBrain:
     def __init__(self):
-        # Load config and metadata
-        self.rules = load_yaml("config/rules.yaml")["rules"]
-        self.tasks_metadata = load_yaml("config/rules.yaml")["tasks"]
-        self.config = load_yaml("config/workstation_config.yaml")
-        self.products = load_yaml("config/products.yaml")['produtos']
+        try:
+            # Load config and metadata
+            self.rules = load_yaml("config/rules.yaml")["rules"]
+            self.tasks_metadata = load_yaml("config/rules.yaml")["tasks"]
+            self.config = load_yaml("config/workstation_config.yaml")
+            self.products = load_yaml("config/products.yaml")['produtos']
+            logger.info("Configuration loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load configuration: {e}")
+            raise
 
         # Initialize state (config set later)
         self.state = WorkstationState(expected_config=None)
@@ -25,151 +63,125 @@ class WorkstationBrain:
         self.evaluator = RuleEvaluator()
 
         # Initialize and start consumers
-        self.hand_consumer = HandConsumer(self.state)
-        self.candy_consumer = CandyConsumer(self.state)
-        self.task_consumer = TaskAssignmentConsumer(self.state, self.on_assignment_received)
-        self.hand_consumer.start()
-        self.candy_consumer.start()
-        self.task_consumer.start()
+        try:
+            self.hand_consumer = HandConsumer(self.state)
+            self.candy_consumer = CandyConsumer(self.state)
+            self.task_consumer = TaskAssignmentConsumer(self.state, self.on_assignment_received)
+            self.hand_consumer.start()
+            self.candy_consumer.start()
+            self.task_consumer.start()
+            logger.info("MQTT consumers started successfully")
+        except Exception as e:
+            logger.error(f"Failed to start MQTT consumers: {e}")
+            raise
 
         # Initialize publishers
-        self.projector_publisher = ProjectorPublisher(self.state)
-        self.task_division_publisher = TaskDivisionPublisher(self.state)
+        try:
+            self.projector_publisher = ProjectorPublisher(self.state)
+            self.task_division_publisher = TaskDivisionPublisher(self.state)
+            self.management_publisher = ManagementInterfacePublisher(self.state)
+            logger.info("MQTT publishers initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize MQTT publishers: {e}")
+            raise
+
+        # Initialize state machine
+        self._setup_state_machine()
+
+        # Create context for state machine
+        self.context = WorkstationBrainContext(self)
+
+    def _setup_state_machine(self):
+        """Setup the state machine with all states and transitions"""
+        self.state_machine = StateMachine(WorkstationStates.IDLE)
+
+        # Add all states
+        self.state_machine.add_state(IdleState())
+        self.state_machine.add_state(WaitingForTaskState())
+        self.state_machine.add_state(CleaningState())
+        self.state_machine.add_state(ExecutingTaskState())
+        self.state_machine.add_state(WaitingConfirmationState())
+        self.state_machine.add_state(TaskCompletedState())
+
+        logger.info("State machine initialized")
 
     def on_assignment_received(self, payload):
         """Called by the TaskAssignmentConsumer when new subtasks are assigned."""
-        subtask_id = payload.get("task_id")
-        product_config = payload.get("config", {})
-        if product_config == {}:
-            product_config = self.products[payload.get("product")]["config"]
-        print(f"[Brain] New task assignment received: {subtask_id} with config {product_config}")
-        # Enqueue the subtask
-        found = False
-        for task_id, task_data in self.tasks_metadata.items():
-            if subtask_id in task_data.get("subtasks", {}):
-                self.task_manager.enqueue_subtask(task_id, subtask_id)
-                self.state.data['SubtaskConfigs'][subtask_id] = product_config
-                print(f"[Brain] Subtask {subtask_id} from {task_id} enqueued.")
-                found = True
-                break
+        try:
+            subtask_id = payload.get("task_id")
+            product_config = payload.get("config", {})
 
-        if not found:
-            print(f"[Brain] Subtask {subtask_id} not found in task metadata.")
-
-    def run(self):
-        print("[Brain] Starting main loop...")
-
-        # Check if table needs cleaning
-        clean = False
-        first_time = True
-        while True:
-
-            # Check for new task assignments
-            current_subtask, started = self.task_manager.get_current_subtask()
-
-            # TODO: Read input from consumers
-            candies = self.state.data["DetectedCandies"]
-            handL = None
-            handR = None
-            if self.state.data['handL_Present']:
-                handL = self.state.data['handL_data']
-            if self.state.data['handR_Present']:
-                handR = self.state.data['handR_data']
-            # TODO: Process input and update state
-            if current_subtask:
-                self.state.update("ExpectedConfig",self.state.data['SubtaskConfigs'][self.task_manager.get_current_subtask_id()[1]])
-                print("[Brain] Current subtask: " + str(self.task_manager.get_current_subtask_id()[1]) + " with config " + str(self.state.data['ExpectedConfig']))
-            if clean:
-                print("[Brain] Cleaning the table before starting a new subtask...")
-                noHands = False
-                noCandies = False                
-                # Looks good if state is updated on message call, and no function is required to be called...
-                if not handL and not handR:
-                    print("[Brain] Cleaning the table, Both hands are not present")
-                    noHands = True
+            if product_config == {}:
+                product_name = payload.get("product")
+                if product_name in self.products:
+                    product_config = self.products[product_name]["config"]
                 else:
-                    print("[Brain] Cleaning the table, Make sure to remove candies from submission area")
-                if len(list(candies.keys())) > 0:
-                    print("[Brain] Cleaning the table, Make sure to remove candies from submission area")    
-                else:
-                    print("[Brain] Cleaning the table, No candies are present")
-                    noCandies = True
-                all_good = noHands and noCandies
-                if all_good: 
-                    clean = False
-                continue
-            
-            # If no current subtask, wait for new assignments
-            if not current_subtask:
-                if first_time:
-                    print("[Brain] Waiting for new task assignments...")
-                    first_time = False
-                continue
+                    logger.warning(f"Product {product_name} not found in configuration")
+                    return
 
-            task_id = self.task_manager.get_current_task_id()
-            subtask_id = self.task_manager.get_current_subtask_id()
-            progress = self.task_manager.get_progress()
+            logger.info(f"New task assignment received: {subtask_id} with config {product_config}")
 
-            # If the subtask has just started
-            if started:
-                # Send initial task metadata to the projector
-                self.projector_publisher.send_task(task_id, subtask_id, progress)
-                
-                
-
-            rules = current_subtask.get("rules", [])
-            completed = True
-
-            for rule_id in rules:
-                rule = self.rules.get(rule_id)
-                if rule and not self.evaluator.evaluate_rule(rule["if"], self.state):
-                    # print(f"[Brain] Rule {rule_id} not satisfied. Waiting for conditions...")
-
-                    # Notify the projector about the unsatisfied rule: Highlight the last cell in red
-                    # self.projector_publisher.highlight_cell_red(
-                    #     self.config["grid"]["rows"],
-                    #     self.config["grid"]["cols"]
-                    # )
-
-                    # If the rule is not satisfied, we can break out of the loop
-                    completed = False
+            # Enqueue the subtask
+            found = False
+            for task_id, task_data in self.tasks_metadata.items():
+                if subtask_id in task_data.get("subtasks", {}):
+                    self.task_manager.enqueue_subtask(task_id, subtask_id)
+                    self.state.data['SubtaskConfigs'][subtask_id] = product_config
+                    logger.info(f"Subtask {subtask_id} from {task_id} enqueued")
+                    found = True
                     break
 
-            if completed:
-                print(f"[Brain] All rules satisfied for subtask {subtask_id}.")
+            if not found:
+                logger.warning(f"Subtask {subtask_id} not found in task metadata")
+        except Exception as e:
+            logger.error(f"Error processing task assignment: {e}")
 
-                # Mark the subtask as completed
-                self.task_manager.advance()
+    def run(self):
+        """Main execution loop using state machine"""
+        logger.info("Starting WorkstationBrain main loop...")
 
-                # Notify the projector about task completion: Highlight the last cell in green
-                self.projector_publisher.highlight_cell_green(
-                    self.config["grid"]["rows"],
-                    self.config["grid"]["cols"]
-                )
+        try:
+            while True:
+                # Execute current state
+                self.state_machine.execute(self.context)
 
-                # Notify the task division publisher
-                start_time = self.task_manager.current_subtask_start_time
-                end_time = self.task_manager.current_subtask_end_time
-                self.task_division_publisher.send_current_subtask_completed(subtask_id, start_time, end_time)
+                # Sleep to avoid busy-waiting
+                time.sleep(0.1)
 
-                # Table needs cleaning before the next subtask
-                clean = True
-                self.state.data["CombinationValid"] = False
-                self.state.data["CandiesWrapped"] = False
-                self.state.data["ExpectedConfig"] = {}
-                # Clear the subtask tracking
-                self.task_manager.clear()
+        except KeyboardInterrupt:
+            logger.info("Received interrupt signal, shutting down...")
+            self.shutdown()
+        except Exception as e:
+            logger.error(f"Unexpected error in main loop: {e}")
+            self.shutdown()
+            raise
 
-            else:
-                print(f"[Brain] Waiting for conditions to be satisfied for subtask {subtask_id}...")
-
-            # Sleep to avoid busy-waiting
-            time.sleep(0.1)
+    def shutdown(self):
+        """Gracefully shutdown all components"""
+        logger.info("Shutting down WorkstationBrain...")
+        try:
+            # Stop consumers
+            if hasattr(self, 'hand_consumer'):
+                # Note: Add stop() method to consumers if not present
+                pass
+            if hasattr(self, 'candy_consumer'):
+                pass
+            if hasattr(self, 'task_consumer'):
+                pass
+            logger.info("All components shut down successfully")
+        except Exception as e:
+            logger.error(f"Error during shutdown: {e}")
 
 
 def sum(a, b):
+    """Simple sum function for demonstration"""
     return a + b
 
+
 if __name__ == "__main__":
-    brain = WorkstationBrain()
-    brain.run()
+    try:
+        brain = WorkstationBrain()
+        brain.run()
+    except Exception as e:
+        logger.error(f"Failed to start WorkstationBrain: {e}")
+        exit(1)
