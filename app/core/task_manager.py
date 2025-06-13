@@ -38,30 +38,31 @@ class TaskManager:
         """Return the current subtask at the front of the queue."""
         if self.subtask_queue:
 
-            # Check if it is a new subtask
-            started = False
-
             # Get the task and subtask IDs
             task_id, subtask_id = self.subtask_queue[0]
 
             # Check if we need to start timing this subtask
             if subtask_id != self.current_subtask_id:
-                started = True
                 self.current_subtask_start_time = time.time()
                 self.current_subtask_id = subtask_id
                 print(f"[TaskManager] Started timing for {subtask_id}.")
 
-            return self.tasks[task_id]["subtasks"].get(subtask_id, None), started
+            return self.tasks[task_id]["subtasks"].get(subtask_id, None)
 
-        return None, False
+        return None
 
     def get_current_subtask_id(self):
         """Return the ID of the current subtask, or None if none available."""
-        return self.subtask_queue[0] if self.subtask_queue else None
+        return self.subtask_queue[0][1] if self.subtask_queue else None
+    
+    def get_current_task_name(self):
+        """Return the name and description of the current subtask"""
+        info = self.tasks[self.subtask_queue[0][0]]["subtasks"][self.subtask_queue[0][1]]
+        return info['task_name']
 
     def get_current_task_id(self):
         """Return the ID of the current task based on the front of the queue."""
-        return self.subtask_queue[0] if self.subtask_queue else None
+        return self.subtask_queue[0][0] if self.subtask_queue else None
 
     def advance(self):
         """Advance to the next subtask and increment completed count."""

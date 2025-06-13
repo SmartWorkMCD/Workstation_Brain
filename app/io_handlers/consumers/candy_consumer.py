@@ -48,17 +48,16 @@ class CandyConsumer(BaseConsumer):
                     'y2': payload[f'yolo_{i}_y2'],
                     'score': payload[f'yolo_{i}_score']
                 }
-                if payload[f'yolo_{i}_score'] < 0.5:
+                if payload[f'yolo_{i}_score'] < 0.6:
                     continue
                 # check if candy is inside validation area
                 # neccessary to normalize x and y values, ask Mateus
                 # assumes x is [0, 960] and y [0,720], same as resolution
-                x1_norm = float(candy['x1'] / 1280)
-                x2_norm = float(candy['x2'] / 1280)
+                x1_norm = float(candy['x1'] / 960)
+                x2_norm = float(candy['x2'] / 960)
                 y1_norm = float(candy['y1'] / 720)
                 y2_norm = float(candy['y2'] / 720)
                 if not all(0.3 < val < 0.7 for val in [x1_norm, x2_norm, y1_norm, y2_norm]):
-                    print("Removed detection candy outside submission area")
                     continue
                 color = str(payload[f'yolo_{i}_class']).capitalize()
                 if color in candies_combination.keys():
@@ -70,7 +69,7 @@ class CandyConsumer(BaseConsumer):
             
             self.state.update("DetectedCandies", candies_combination)
             self.state.update("CandiesData",candies)
-            print(f"[MQTT] Detected candies: {candies_combination}")
+            # print(f"[MQTT] Detected candies: {candies_combination}")
 
             # print(f"[MQTT] Received candy detection message: {payload}")
         except json.JSONDecodeError as e:

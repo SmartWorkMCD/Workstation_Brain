@@ -37,8 +37,20 @@ class ProjectorPublisher(BasePublisher):
     def send_task(self, task_id: str, subtask_id: str, progress: float):
         """Send task metadata and progress to the projector module."""
         message = {
-            "task_id": task_id,
-            "subtask_id": subtask_id,
+            "task": task_id,
+            "subtask": subtask_id,
             "progress": round(progress, 2)  # Between 0 and 100
+        }
+        self.publish(self.topic, message)
+
+    def task_complete(self, task_complete: bool):
+        message = {
+            "completed": task_complete
+        }
+        self.publish(self.topic, message)
+    
+    def task_clear(self, task_clear: bool):
+        message = {
+            "clear": task_clear
         }
         self.publish(self.topic, message)

@@ -19,10 +19,9 @@ class WorkstationState:
             "SubtaskConfigs": {}
         }
         self.base_products = {
-            'T1A': {'Yellow': 1},
-            'T1B': {'Blue': 1},
-            'T1C': {'Green': 1},
-            'T1D': {'Red': 1}
+            'T1A': {'Red': 1},
+            'T1B': {'Green': 1},
+            'T1C': {'Blue': 1}
         }
 
     def update(self, key, value):
@@ -64,6 +63,9 @@ class WorkstationState:
     def register_hand_presence(self, hand_label, present):
         """Register the presence of a hand."""
         self.data[f"{hand_label}_Present"] = present
+
+    def get_hand_presence(self):
+        return self.data['handL_Present'] or self.data['handR_Present']
 
     def get_hand_grid_cell(self):
         return self.data.get("HandGridCell")

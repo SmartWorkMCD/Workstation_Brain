@@ -39,9 +39,9 @@ class HandConsumer(BaseConsumer, ABC):
 
                     self.state.update(f"{hand_label}_GridCell", cell)
                     self.state.register_hand_presence(hand_label, True)
-                    print(f"[MQTT] {hand_label} at ({x:.1f}, {y:.1f}) → Grid Cell {cell}")
+                    # print(f"[MQTT] {hand_label} at ({x:.1f}, {y:.1f}) → Grid Cell {cell}")
                 else:
-                    print(f"[MQTT] Missing coordinates for {hand_label}")
+                    # print(f"[MQTT] Missing coordinates for {hand_label}")
                     self.state.update(f"{hand_label}_GridCell", None)
                     self.state.register_hand_presence(hand_label, False)
 

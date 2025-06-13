@@ -61,7 +61,6 @@ class StateMachine:
             self.states[self.current_state].exit(context)
             
         # Enter new state
-        old_state = self.current_state
         self.current_state = new_state
         self.states[new_state].enter(context)
         

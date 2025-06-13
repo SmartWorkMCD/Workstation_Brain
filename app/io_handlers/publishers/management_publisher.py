@@ -48,6 +48,15 @@ class ManagementInterfacePublisher(BasePublisher):
         logger.debug(f"Task update: {subtask_id} - {status} ({progress}%)")
         self.publish(self.topic, data)
 
+    def send_user_action(self, action_type: str, details: dict = {}):
+        self.publish(self.topic, {"type": "user_action", "action": action_type, "details": details})
+        # "confirmation_received", {
+        # "subtask_id": context.task_manager.get_current_subtask_id()
+        # }
+    
+    def send_performance_metrics(self, metrics: dict = {}):
+        self.publish(self.topic, {"type": "performance_metrics", "metrics": metrics})
+        
     # def send_sensor_data_summary(self, candies_count: int, hands_detected: dict):
     #     """Send sensor data summary to management interface."""
     #     data = {

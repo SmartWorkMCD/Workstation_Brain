@@ -20,8 +20,8 @@ import paho.mqtt.publish as publish
 
 
 # simulated data
-tasks1 = {'produtoA': ['T1A', 'T1A', 'T1B'], 'produtoB': ['T1A', 'T1B', 'T1B'], 'produtoC': ['T1A', 'T1A', 'T1A', 'T1B', 'T1B']}
-tasks2 = {'produtoA': ['T1C', 'T1C', 'T1C', 'T1D', 'T2A'], 'produtoB': ['T1C', 'T1C', 'T1C', 'T1C', 'T1D', 'T1D', 'T2A'], 'produtoC': ['T1C', 'T1D', 'T1D', 'T1D', 'T2A']}
+tasks1 = {'produtoA': ['T1A', 'T1B', 'T1B'], 'produtoB': ['T1A', 'T1A', 'T1B'], 'produtoC': ['T1A', 'T1A', 'T1A', 'T1B', 'T1C']}
+tasks2 = {'produtoA': ['T1B', 'T1C', 'T2A'], 'produtoB': ['T1B', 'T1B', 'T1B', 'T1C', 'T1C', 'T2A'], 'produtoC': ['T1C', 'T2A']}
 # tasks3 = {'produtoA': ['T3A', 'T3B', 'T3C'], 'produtoB': ['T3A', 'T3B', 'T3C'], 'produtoC': ['T3A', 'T3B', 'T3C']}
 
 tasks = [tasks1, tasks2]

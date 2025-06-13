@@ -11,10 +11,9 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
         self.topic = self.config.get("task_assignment_topic", "v1/devices/me/attributes")
         self.on_assignment_callback = on_assignment_callback
         self.base_products = {
-            'T1A': {'Yellow': 1},
-            'T1B': {'Blue': 1},
-            'T1C': {'Green': 1},
-            'T1D': {'Red': 1}
+            'T1A': {'Red': 1},
+            'T1B': {'Green': 1},
+            'T1C': {'Blue': 1}
         }
 
     def get_topic(self):
