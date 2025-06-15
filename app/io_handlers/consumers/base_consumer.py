@@ -1,14 +1,14 @@
 import paho.mqtt.client as mqtt
 import threading
 from abc import ABC, abstractmethod
+from utils.config import CONFIG
 
-from utils.yaml_loader import load_yaml
 
 
 class BaseConsumer(ABC):
     def __init__(self, state):
         self.state = state
-        self.config = load_yaml("config/workstation_config.yaml")
+        self.config = CONFIG
         self.broker_conf = self.config.get("mqtt", {})
         self.client = None
         self.thread = None

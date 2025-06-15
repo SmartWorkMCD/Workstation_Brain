@@ -1,11 +1,10 @@
 from io_handlers.publishers.base_publisher import BasePublisher
-from utils.yaml_loader import load_yaml
-
+from utils.config import CONFIG
 
 class ProjectorPublisher(BasePublisher):
     def __init__(self, state):
         super().__init__(state)
-        self.config = load_yaml("config/workstation_config.yaml")
+        self.config = CONFIG
         self.topic = self.config.get("projector_topic", "projector/control")
         self.colNames = ['A', 'B', 'C', 'D', 'E']
 

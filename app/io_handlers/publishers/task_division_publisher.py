@@ -1,12 +1,12 @@
 from io_handlers.publishers.base_publisher import BasePublisher
-from utils.yaml_loader import load_yaml
+from utils.config import CONFIG
 import time
 
 
 class TaskDivisionPublisher(BasePublisher):
     def __init__(self, state):
         super().__init__(state)
-        self.config = load_yaml("config/workstation_config.yaml")
+        self.config = CONFIG
         self.topic = self.config.get("task_division_topic", "v1/devices/me/telemetry")
 
     def send_current_subtask_completed(self, subtask_id: str, start_time: float, end_time: float):

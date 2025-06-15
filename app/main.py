@@ -1,4 +1,5 @@
 from utils.yaml_loader import load_yaml
+from utils.config import CONFIG
 from core.state import WorkstationState
 from core.evaluator import RuleEvaluator
 from core.task_manager import TaskManager
@@ -48,7 +49,7 @@ class WorkstationBrain:
             # Load config and metadata
             self.rules = load_yaml("config/rules.yaml")["rules"]
             self.tasks_metadata = load_yaml("config/rules.yaml")["tasks"]
-            self.config = load_yaml("config/workstation_config.yaml")
+            self.config = CONFIG
             self.products = load_yaml("config/products.yaml")['produtos']
             logger.info("Configuration loaded successfully")
         except Exception as e:

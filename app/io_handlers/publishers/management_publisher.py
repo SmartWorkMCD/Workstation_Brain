@@ -2,15 +2,14 @@ import time
 import logging
 
 from io_handlers.publishers.base_publisher import BasePublisher
-from utils.yaml_loader import load_yaml
-
+from utils.config import CONFIG
 logger = logging.getLogger(__name__)
 
 
 class ManagementInterfacePublisher(BasePublisher):
     def __init__(self, state):
         super().__init__(state)
-        self.config = load_yaml("config/workstation_config.yaml")
+        self.config = CONFIG
         self.topic = self.config.get("management_topic", "management/interface")
 
     def send_system_status(self, status: str, message: str = ""):
