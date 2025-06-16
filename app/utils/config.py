@@ -9,6 +9,7 @@ print(f"[CONFIG] Loaded configuration: {CONFIG}")
 broker_ip_os = os.getenv("BROKER_IP", CONFIG["mqtt"].get("broker_ip", "localhost"))
 CONFIG["mqtt"]["broker_ip"] = broker_ip_os
 print(f"[CONFIG] Broker IP set to: {broker_ip_os}")
+print(CONFIG)
 
 
 
