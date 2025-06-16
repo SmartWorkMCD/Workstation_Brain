@@ -8,7 +8,7 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
     def __init__(self, state, on_assignment_callback):
         super().__init__(state)
 
-        self.topic = self.config.get("task_assignment_topic", "v1/devices/me/attributes")
+        self.topic = self.config.get("task_assignment_topic", "tasks/publish")
         self.on_assignment_callback = on_assignment_callback
         self.base_products = {
             'T1A': {'Red': 1},
