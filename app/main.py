@@ -183,6 +183,7 @@ if __name__ == "__main__":
     try:
         print("AAAA 1")
         logger.info("All AAAA 1")
+        logger.info(CONFIG)
         brain = WorkstationBrain()
         print("AAAA 2")
         brain.run()
