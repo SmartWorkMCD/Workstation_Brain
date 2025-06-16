@@ -21,7 +21,7 @@ class CandyConsumer(BaseConsumer):
     #     use_expected = random.random() < 0.5  # 50% chance to match expected config
     #     if use_expected:
     #         detected_candies = self.state.data.get("ExpectedConfig", {}).copy()
-    #         print("[Sim] Using expected config for detection")
+    #         logger.info("[Sim] Using expected config for detection")
     #     else:
     #         detected_candies = {}
     #         for label in labels:
@@ -30,7 +30,7 @@ class CandyConsumer(BaseConsumer):
     #                 detected_candies[label] = count
     #
     #     self.state.update("DetectedCandies", detected_candies)
-    #     print(f"[Sim] Detected candies: {detected_candies}")
+    #     logger.info(f"[Sim] Detected candies: {detected_candies}")
 
     def on_message(self, client, userdata, msg):
         try:
@@ -69,8 +69,8 @@ class CandyConsumer(BaseConsumer):
             
             self.state.update("DetectedCandies", candies_combination)
             self.state.update("CandiesData",candies)
-            # print(f"[MQTT] Detected candies: {candies_combination}")
+            # logger.info(f"[MQTT] Detected candies: {candies_combination}")
 
-            # print(f"[MQTT] Received candy detection message: {payload}")
+            # logger.info(f"[MQTT] Received candy detection message: {payload}")
         except json.JSONDecodeError as e:
-            print(f"[MQTT] Error decoding JSON: {e}")
+            logger.info(f"[MQTT] Error decoding JSON: {e}")

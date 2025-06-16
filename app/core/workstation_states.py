@@ -99,7 +99,7 @@ class ExecutingTaskState(State):
         task_id = context.task_manager.get_current_task_id()
         subtask_id = context.task_manager.get_current_subtask_id()
         progress = context.task_manager.get_progress()
-        print(f"\033[91mExecuting subtask: {subtask_id} of task {task_id}\033[0m")
+        logger.info(f"\033[91mExecuting subtask: {subtask_id} of task {task_id}\033[0m")
         # Update expected configuration
         if current_subtask:
             expected_config = context.state.data['SubtaskConfigs'][subtask_id]

@@ -36,7 +36,7 @@ class BaseConsumer(ABC):
             self.client.subscribe(subscribe_topic)
 
         self.thread = threading.Thread(target=self.client.loop_forever, daemon=True)
-        print(f"[MQTT] Starting MQTT consumer thread..., {subscribe_topic}")
+        logger.info(f"[MQTT] Starting MQTT consumer thread..., {subscribe_topic}")
         self.thread.start()
 
     def get_topic(self):
@@ -44,7 +44,7 @@ class BaseConsumer(ABC):
         return None
 
     def on_connect(self, client, userdata, flags, rc):
-        print(f"[MQTT] Connected with result code {rc}")
+        logger.info(f"[MQTT] Connected with result code {rc}")
 
     @abstractmethod
     def on_message(self, client, userdata, msg):

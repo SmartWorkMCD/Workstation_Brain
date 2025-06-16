@@ -1,7 +1,14 @@
 import time
 from collections import deque
 
+import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 class TaskManager:
     def __init__(self, tasks):
         """
@@ -26,13 +33,13 @@ class TaskManager:
 
             # Add the subtask to the queue
             self.subtask_queue.append((task_id, subtask_id))
-            print(f"[TaskManager] Enqueued subtask {subtask_id} from {task_id}.")
+            logger.info(f"[TaskManager] Enqueued subtask {subtask_id} from {task_id}.")
 
             # Track the total number of tasks received
             self.total_enqueued += 1
 
         else:
-            print(f"[TaskManager] Invalid subtask {subtask_id} for task {task_id}.")
+            logger.info(f"[TaskManager] Invalid subtask {subtask_id} for task {task_id}.")
 
     def get_current_subtask(self):
         """Return the current subtask at the front of the queue."""
@@ -45,7 +52,7 @@ class TaskManager:
             if subtask_id != self.current_subtask_id:
                 self.current_subtask_start_time = time.time()
                 self.current_subtask_id = subtask_id
-                print(f"[TaskManager] Started timing for {subtask_id}.")
+                logger.info(f"[TaskManager] Started timing for {subtask_id}.")
 
             return self.tasks[task_id]["subtasks"].get(subtask_id, None)
 
@@ -76,9 +83,9 @@ class TaskManager:
 
             self.completed_count += 1
 
-            print(f"[TaskManager] Completed {subtask_id} in {duration:.2f} seconds.")
+            logger.info(f"[TaskManager] Completed {subtask_id} in {duration:.2f} seconds.")
         else:
-            print("[TaskManager] No subtasks to advance.")
+            logger.info("[TaskManager] No subtasks to advance.")
 
     def clear(self):
         """Clear the current subtask tracking."""

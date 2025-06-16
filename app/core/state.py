@@ -1,5 +1,12 @@
 from typing import Dict
+import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class WorkstationState:
     def __init__(self, expected_config: Dict[str, int] = None):
@@ -45,7 +52,7 @@ class WorkstationState:
 
     def validate_combination(self):
         """Check if the detected candies match the expected configuration."""
-        print("\033[91m[State] Validating combination...\033[0m")
+        logger.info("\033[91m[State] Validating combination...\033[0m")
         expected = self.data["ExpectedConfig"]
         detected = self.data["DetectedCandies"]
         self.data["CombinationValid"] = all(
@@ -53,8 +60,8 @@ class WorkstationState:
         ) and all(
             color in expected for color in detected
         )
-        print(f"\033[92m[State] Expected Config: {self.data['ExpectedConfig']}\033[0m")
-        print(f"\033[93m[State] Detected Candies: {self.data['DetectedCandies']}\033[0m")
+        logger.info(f"\033[92m[State] Expected Config: {self.data['ExpectedConfig']}\033[0m")
+        logger.info(f"\033[93m[State] Detected Candies: {self.data['DetectedCandies']}\033[0m")
         if self.data["CombinationValid"]:
             self.data["CandiesWrapped"] = True
         else:

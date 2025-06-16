@@ -1,7 +1,14 @@
 import json
 import paho.mqtt.client as mqtt
 from utils.config import CONFIG
+import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 class BasePublisher:
     def __init__(self, state):
         self.state = state
@@ -27,11 +34,11 @@ class BasePublisher:
             payload = json.dumps(data)
             result = self.client.publish(topic, payload)
             if result.rc != mqtt.MQTT_ERR_SUCCESS:
-                print(f"[MQTT] Failed to publish to {topic}: {result.rc}")
+                logger.info(f"[MQTT] Failed to publish to {topic}: {result.rc}")
             else:
-                print(f"[MQTT] Published to {topic}: {payload}")
+                logger.info(f"[MQTT] Published to {topic}: {payload}")
         except Exception as e:
-            print(f"[MQTT] Error publishing to {topic}: {e}")
+            logger.info(f"[MQTT] Error publishing to {topic}: {e}")
 
     def stop(self):
         self.client.loop_stop()
