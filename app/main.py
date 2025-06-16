@@ -181,8 +181,11 @@ def sum(a, b):
 
 if __name__ == "__main__":
     try:
+        print("AAAA 1")
         brain = WorkstationBrain()
+        print("AAAA 2")
         brain.run()
+        print("AAAA 3")
     except Exception as e:
         logger.error(f"Failed to start WorkstationBrain: {e}")
         exit(1)
