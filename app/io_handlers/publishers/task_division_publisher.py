@@ -7,7 +7,8 @@ class TaskDivisionPublisher(BasePublisher):
     def __init__(self, state):
         super().__init__(state)
         self.config = CONFIG
-        self.topic = self.config.get("task_division_topic", "v1/devices/me/telemetry")
+        self.topic = self.config.get("task_division_topic", "tasks/subscribe/brain")
+        print(f"AAAAAAAA: {self.topic}")
 
     def send_current_subtask_completed(self, subtask_id: str, start_time: float, end_time: float):
         payload = {
