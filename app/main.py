@@ -182,6 +182,7 @@ def sum(a, b):
 if __name__ == "__main__":
     try:
         print("AAAA 1")
+        logger.info("All AAAA 1")
         brain = WorkstationBrain()
         print("AAAA 2")
         brain.run()
