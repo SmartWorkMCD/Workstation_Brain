@@ -28,7 +28,7 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
     def get_topic(self):
         return self.topic
 
-    def on_message(self, client, userdata, msg):
+    """def on_message(self, client, userdata, msg):
         try:
             payload = json.loads(msg.payload.decode("utf-8"))
             logger.info(f"[MQTT] Task Assignment received: {payload}")
@@ -48,4 +48,32 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
             
 
         except Exception as e:
+            logger.info(f"[MQTT] Error decoding task assignment: {e}")"""
+
+    def on_message(self, client, userdata, msg):
+        try:
+            raw_payload = msg.payload.decode("utf-8")
+            payload = json.loads(raw_payload)
+
+            # Verifica se ainda é string aninhada
+            if isinstance(payload, str):
+                payload = json.loads(payload)
+
+            logger.info(f"[MQTT] Task Assignment received: {payload}")
+
+            if not isinstance(payload, dict) or 'tasks' not in payload:
+                logger.info(f"[MQTT] Warning: Expected dict with 'tasks' key, got {payload}")
+                return
+
+            for product, subtasks in payload['tasks'].items():
+                for subtask in subtasks:
+                    if subtask in self.base_products:
+                        logger.info(f"[MQTT-Tasks] Subtask {subtask} for product {self.base_products[subtask]}")
+                        self.on_assignment_callback({"task_id": subtask, "config": self.base_products[subtask]})
+                    else:
+                        logger.info(f"[MQTT-Tasks] Subtask {subtask} for product {product}")
+                        self.on_assignment_callback({"task_id": subtask, "product": product})
+
+        except Exception as e:
             logger.info(f"[MQTT] Error decoding task assignment: {e}")
+
