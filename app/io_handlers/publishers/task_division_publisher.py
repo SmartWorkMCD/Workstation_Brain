@@ -2,6 +2,15 @@ from io_handlers.publishers.base_publisher import BasePublisher
 from utils.config import CONFIG
 import time
 
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 
 class TaskDivisionPublisher(BasePublisher):
     def __init__(self, state):

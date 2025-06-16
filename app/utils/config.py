@@ -3,6 +3,15 @@ import os
 import dotenv
 dotenv.load_dotenv()
 
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 CONFIG = load_yaml("config/workstation_config.yaml")
 logger.info(f"[CONFIG] Loaded configuration: {CONFIG}")
 

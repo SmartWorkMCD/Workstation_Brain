@@ -4,6 +4,15 @@ import random
 from io_handlers.consumers.base_consumer import BaseConsumer
 
 
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 class CandyConsumer(BaseConsumer):
     def __init__(self, state):
         super().__init__(state)
