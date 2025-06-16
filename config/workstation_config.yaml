@@ -8,8 +8,8 @@ mqtt:
 
 hand_topic: "hands/position"
 candy_topic: "objdet/results"
-task_assignment_topic: "v1/devices/me/attributes"
-task_division_topic: "v1/devices/me/telemetry"
+task_assignment_topic: "tasks/publish"
+task_division_topic: "tasks/subscribe/brain"
 processing_topic: "projector/control"
 interaction_topic: "management/interface"
 
