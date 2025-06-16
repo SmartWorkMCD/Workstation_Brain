@@ -24,12 +24,12 @@ class TaskAssignmentConsumer(BaseConsumer, ABC):
             payload = json.loads(msg.payload.decode("utf-8"))
             print(f"[MQTT] Task Assignment received: {payload}")
 
-            if not payload or not isinstance(payload, dict):
+            if not payload['tasks'] or not isinstance(payload, dict):
                 print(f"[MQTT] Warning: Expected 'payload' as a dict, got {payload}")
                 return
             
-            for product in payload.keys():
-                for subtask in payload[product]:
+            for product in payload['tasks'].keys():
+                for subtask in payload['tasks'][product]:
                     if subtask in self.base_products.keys():
                         print(f"[MQTT-Tasks] Subtask {subtask} for product {self.base_products[subtask]}")
                         self.on_assignment_callback({"task_id": subtask, "config": self.base_products[subtask]})
